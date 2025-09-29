@@ -10,7 +10,10 @@ from wtforms import StringField, PasswordField, SubmitField
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
+app.config['SQLALCHEMY_BINDS'] = {
+    'content': 'sqlite://content.db'
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -24,13 +27,23 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    school = db.Column(db.String(120), nullable=True)
+    class_ = db.Column("class", db.String(120), nullable=True)
+    role = db.Column(db.String(120), nullable=False, default="student")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
+class Video(db.Model):
+    __bind_key__ = 'content'  # Bindet das Modell an content.db
+    id = db.Column(db.Integer, primary_key=True)
+    video = db.Column(db.String, nullable=False)
+    _class_ = db.Column(db.String, nullable=False)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -82,6 +95,19 @@ def login():
 def dashboard():
     return render_template('dashboard.html', name=current_user.username)
 
+@app.route("/profile/<username>")
+def profile(username):
+    user =  User.query.filter_by(username=username).first()
+    if not user:
+        abort(404)
+
+    return {
+        "username": user.username,
+        "role": user.role,
+        "school": user.school,
+        "class": user.class_,
+    }
+
 @app.route('/logout', methods=['GET'])
 @login_required
 def logout():
@@ -106,14 +132,8 @@ def settings():
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('404.html'), 404
+    return f'Error 404 Site not found!', 404
 
-@app.route('/adminer', methods=['GET'])
-@login_required
-def adminer():
-    if current_user.username != 'admin':
-        abort(403)
-    return send_from_directory('.', 'adminer.php')
 
 if __name__ == '__main__':
     app.run(debug=True)
