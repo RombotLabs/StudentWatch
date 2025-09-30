@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
 app.config['SQLALCHEMY_BINDS'] = {
-    'content': 'sqlite://content.db'
+    'content': 'sqlite:///content.db'
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -21,7 +21,11 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
+videos_clean = []
+
 class User(db.Model, UserMixin):
+    __tablename__ = "user"
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -38,10 +42,15 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
 class Video(db.Model):
-    __bind_key__ = 'content'  # Bindet das Modell an content.db
+    __bind_key__ = 'content'
+    __tablename__ = "Content"
+
     id = db.Column(db.Integer, primary_key=True)
     video = db.Column(db.String, nullable=False)
     _class_ = db.Column(db.String, nullable=False)
+    _school_ = db.Column(db.String, nullable=False)
+    creation_date = db.Column(db.DateTime, nullable=False)
+    expiring_date = db.Column(db.DateTime, nullable=True)
 
 
 @login_manager.user_loader
@@ -90,10 +99,25 @@ def login():
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', form=form)
 
+
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html', name=current_user.username)
+    user = User.query.filter_by(username=current_user.username).first()
+    if user:
+        print(user.class_)
+    
+    videos = Video.query.filter(
+        Video._school_ == current_user.school,
+        Video._class_ == current_user.class_,
+    ).all()
+    
+    for v in videos:
+        video_id = v.video.replace("https://www.youtube.com/watch?v=", "")
+        videos_clean.append(video_id)
+
+    return render_template('dashboard.html', name=current_user.username, video_list=videos_clean)
+
 
 @app.route("/profile/<username>")
 def profile(username):
