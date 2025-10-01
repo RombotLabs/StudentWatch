@@ -39,8 +39,12 @@ Built with Flask and SQLite, it enables seamless video sharing within a controll
    python main.py
    ```
 
+**IMPORTANT!!!**
+Please chnage your secret key before you start the website!!!
+
 The application will be accessible at [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 If you change the last line from app.run() to app.run(host='0.0.0.0', port=5000)
+
 
 ## Usage
 
