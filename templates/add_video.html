@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Video eintragen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Neues Video eintragen</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">{{ form.video_url.label }} {{ form.video_url(class="form-control") }}</div>
+        <div class="mb-3">{{ form.target_class.label }} {{ form.target_class(class="form-control") }}</div>
+        <div class="mb-3">{{ form.target_school.label }} {{ form.target_school(class="form-control") }}</div>
+        <div class="mb-3">{{ form.expiring_date.label }} {{ form.expiring_date(class="form-control") }}</div>
+        <div>{{ form.submit(class="btn btn-primary") }}</div>
+    </form>
+</div>
+</body>
+</html>

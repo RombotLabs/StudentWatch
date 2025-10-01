@@ -24,7 +24,26 @@
         <div class="dashboard-box text-center">
             <h2 class="mb-4">Willkommen im Dashboard!</h2>
             <p>Du bist erfolgreich eingeloggt.</p>
-            <h3>{{ video_list }}</h3>
+            <div>
+                {% for video in video_list %}
+                    <iframe 
+                        src="https://www.613tube.com/watch/?v={{ video }}"
+                        width="560" 
+                        height="315"
+                        title="YouTube video player"
+                        frameborder="0"
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                {% endfor %}
+                {% if role == 'teacher' %}
+                    <a href="{{ url_for('add_video') }}" class="btn btn-success mb-3">
+                        Neues Video eintragen
+                    </a>
+                {% endif %}
+
+            </div>
             <a href="{{ url_for('logout') }}" class="btn btn-primary mt-3">Logout</a>
         </div>
     </div>
