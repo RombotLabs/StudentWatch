@@ -63,6 +63,3 @@ If you change the last line from app.run() to app.run(host='0.0.0.0', port=5000)
 
 This project is licensed under the MIT License.
 See the [LICENSE](LICENSE) file for details.
-
-```
-```
