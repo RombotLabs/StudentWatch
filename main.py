@@ -122,6 +122,36 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
+@app.route('/register/<schule_>/<klasse_>', methods=['GET', 'POST'])
+def classregister(schule_, klasse_):
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        # Überprüfen, ob der Benutzername oder die E-Mail schon existiert
+        if User.query.filter_by(username=form.username.data).first():
+            flash('Username already exists.', 'warning')
+            return render_template('register.html', form=form)
+        if User.query.filter_by(email=form.email.data).first():
+            flash('Email already registered.', 'warning')
+            return render_template('register.html', form=form)
+
+        # Benutzer mit Klassen- und Schulzuweisung anlegen
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            school=schule_,
+            class_=klasse_,
+            role="student"
+        )
+        user.set_password(form.password.data)
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash(f'Account created successfully for {klasse_} at {schule_}!', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
