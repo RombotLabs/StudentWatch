@@ -1,0 +1,20 @@
+<!-- filepath: /home/felix/Desktop/School/EduStream/templates/edit_user.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User bearbeiten</title>
+</head>
+<body>
+    <h1>User bearbeiten: {{ user.username }}</h1>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>{{ form.username.label }} {{ form.username(size=32) }}</p>
+        <p>{{ form.email.label }} {{ form.email(size=32) }}</p>
+        <p>{{ form.role.label }} {{ form.role() }}</p>
+        <p>{{ form.school.label }} {{ form.school(size=32) }}</p>
+        <p>{{ form.class_.label }} {{ form.class_(size=32) }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <a href="{{ url_for('admin_users') }}">Zurück zur Übersicht</a>
+</body>
+</html>

@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, DateField
+from wtforms import StringField, PasswordField, SubmitField, DateField, SelectField
 from urllib.parse import urlparse, parse_qs
 
 app = Flask(__name__)
@@ -60,6 +60,26 @@ class VideoForm(FlaskForm):
     expiring_date = DateField('Ablaufdatum (YYYY-MM-DD)', format='%Y-%m-%d')
     submit = SubmitField('Video eintragen')
 
+class RegistrationForm(FlaskForm):
+    username = StringField('Username')
+    email = StringField('Email')
+    password = PasswordField('Password')
+    submit = SubmitField('Sign Up')
+
+class LoginForm(FlaskForm):
+    username = StringField('Benutzername')
+    password = PasswordField('Passwort')
+    email = StringField('E-Mail')
+    submit = SubmitField('Login')
+
+class EditUserForm(FlaskForm):
+    username = StringField('Username')
+    email = StringField('Email')
+    role = SelectField('Role', choices=[('student', 'Student'), ('teacher', 'Teacher'), ('admin', 'Admin')])
+    school = StringField('School')
+    class_ = StringField('Class')
+    submit = SubmitField('Update')
+
 
 def extract_video_id(url: str) -> str:
     """Extract the YouTube video ID from a URL or return None if invalid."""
@@ -92,18 +112,6 @@ def extract_video_id(url: str) -> str:
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-class RegistrationForm(FlaskForm):
-    username = StringField('Username')
-    email = StringField('Email')
-    password = PasswordField('Password')
-    submit = SubmitField('Sign Up')
-
-class LoginForm(FlaskForm):
-    username = StringField('Benutzername')
-    password = PasswordField('Passwort')
-    email = StringField('E-Mail')
-    submit = SubmitField('Login')
 
 
 @app.route('/', methods=['GET'])
@@ -249,6 +257,43 @@ def settings():
         flash('Your settings have been updated!', 'success')
         return redirect(url_for('dashboard'))
     return render_template('settings.html', form=form)
+
+@app.route('/admin/users', methods=['GET', 'POST'])
+@login_required
+def admin_users():
+    if current_user.role != 'admin':
+        abort(403)
+    users = User.query.all()
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    if current_user.role != 'admin':
+        abort(403)
+    user = User.query.get_or_404(user_id)
+    form = EditUserForm(obj=user)
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role = form.role.data
+        user.school = form.school.data
+        user.class_ = form.class_.data
+        db.session.commit()
+        flash('User updated!', 'success')
+        return redirect(url_for('admin_users'))
+    return render_template('edit_user.html', form=form, user=user)
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if current_user.role != 'admin':
+        abort(403)
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted!', 'info')
+    return redirect(url_for('admin_users'))
 
 @app.errorhandler(404)
 def not_found_error(error):
